@@ -1,0 +1,83 @@
+@font-face {
+    font-family: 'Terminal Grotesk';
+    src: url(fonts/terminal-grotesque.woff2) format(woff2);
+}
+
+*{
+    margin: 0;
+    padding: 0;
+}
+
+.container{
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: 6fr 4fr;
+}
+
+.oben {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+}
+
+
+.unten{
+    height: 40vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;  
+}
+
+.tasteweiss{
+    font-family: 'Terminal Grotesk';
+    font-size: 60px;
+    width: 100px;
+    height: 300px;
+    border-radius: 10px;
+    background-color: rgb(255, 255, 255);
+    border: solid 3px black;
+}
+
+.tasteweiss:active{
+    background-color: blue;
+}
+
+.tasteschwarz{
+font-family: 'Terminal Grotesk';
+font-size: 60px;
+width: 100px;
+height: 300px;
+border-radius: 10px;
+color: white;
+background-color: black;
+transform: translateY(-100px);
+}
+
+#previewImage {
+  display: none;
+  height: 40vh;
+  width: auto;
+  border-radius: 20px;
+  margin-bottom: 60px;
+  border: solid 2px black;
+}
+
+#uploadForm{
+display: flex;
+justify-content: center;
+align-items: center;
+font-family: Arial, Helvetica, sans-serif;
+
+}
+
+#logo{
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    height: 10vh;
+    width: auto;
+}

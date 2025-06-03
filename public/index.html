@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bild zu Musik</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <img src="fonts/imgsampler logo.png" id="logo">
+  <div class="container">
+    <div class="oben">
+   <div class="uploadwindow" style="margin-top: 20px;">
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" name="image" accept="image/*" required />
+    <button type="submit">Los geht’s</button>
+  </form>
+
+  <p id="status"></p>
+
+  <div id="preview" style="margin-top: 20px;">
+    <img id="previewImage" src="" alt="Bildvorschau" />
+  </div>
+</div>
+
+
+
+  <p id="status"></p>
+    </div>
+    <div class="unten">
+<div id="pitch-buttons">
+  <button onclick="playPitch(0)" class="tasteweiss">a</button>
+  <button onclick="playPitch(1)" class="tasteschwarz">w</button>
+  <button onclick="playPitch(2)" class="tasteweiss">s</button>
+  <button onclick="playPitch(3)" class="tasteschwarz">e</button>
+  <button onclick="playPitch(4)" class="tasteweiss">d</button>
+  <button onclick="playPitch(5)" class="tasteweiss">f</button>
+  <button onclick="playPitch(6)" class="tasteschwarz">t</button>
+  <button onclick="playPitch(7)" class="tasteweiss">g</button>
+  <button onclick="playPitch(8)" class="tasteschwarz">z</button>
+  <button onclick="playPitch(9)" class="tasteweiss">h</button>
+  <button onclick="playPitch(10)" class="tasteschwarz">u</button>
+  <button onclick="playPitch(11)" class="tasteweiss">j</button>
+</div>
+</div>
+ 
+</div>
+ <div id="audioPlayer" style="display: none; margin-top: 20px;">
+  <audio controls>
+    <source src="/output/output.mp3" type="audio/mpeg">
+    Dein Browser unterstützt den Audio-Tag nicht.
+  </audio>
+  </div>
+</div>
+
+  <script>
+    let currentAudioContext = null;
+    let currentSource = null;
+
+
+    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      document.getElementById("status").innerText = "🔄 loading...";
+
+      const response = await fetch("/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+  document.getElementById("status").innerText = "✅ Sound generiert.";
+ // document.getElementById("audioPlayer").style.display = "block";//
+  // Damit das Audio beim Neugenerieren neu geladen wird:
+  document.querySelector("#audioPlayer audio source").src = "/output/output.mp3?" + new Date().getTime();
+  document.querySelector("#audioPlayer audio").load();
+} else {
+        document.getElementById("status").innerText = "❌ Fehler: " + result.error;
+      }
+    });
+
+      const notes = [
+    { name: "C4", semitone: 0 },
+    { name: "C♯4", semitone: 1 },
+    { name: "D4", semitone: 2 },
+    { name: "D♯4", semitone: 3 },
+    { name: "E4", semitone: 4 },
+    { name: "F4", semitone: 5 },
+    { name: "F♯4", semitone: 6 },
+    { name: "G4", semitone: 7 },
+    { name: "G♯4", semitone: 8 },
+    { name: "A4", semitone: 9 },
+    { name: "A♯4", semitone: 10 },
+    { name: "B4", semitone: 11 },
+  ];
+
+  const container = document.getElementById("pitch-buttons");
+
+
+async function playPitch(semitones) {
+  // Bestehende Wiedergabe stoppen
+  if (currentSource) {
+    try {
+      currentSource.stop();
+    } catch (e) {
+      // Ignorieren, falls bereits gestoppt
+    }
+    currentSource.disconnect();
+  }
+  if (currentAudioContext) {
+    currentAudioContext.close();
+  }
+
+  // Neuer Audio-Kontext
+  const context = new AudioContext();
+  currentAudioContext = context;
+
+  const response = await fetch("/output/output.mp3");
+  const arrayBuffer = await response.arrayBuffer();
+  const audioBuffer = await context.decodeAudioData(arrayBuffer);
+
+  const source = context.createBufferSource();
+  currentSource = source;
+  source.buffer = audioBuffer;
+
+  const pitchFactor = Math.pow(2, semitones / 12);
+  source.playbackRate.value = pitchFactor;
+
+  source.connect(context.destination);
+  source.start();
+}
+
+  // Tasten → Noten-Zuordnung
+const keyToNoteMap = {
+  a: 0,  // C4
+  w: 1,
+  s: 2,
+  e: 3,
+  d: 4,
+  f: 5,
+  t: 6,
+  g: 7,
+  z: 8,
+  h: 9,
+  u: 10,
+  j: 11  // B4
+};
+
+document.addEventListener("keydown", (event) => {
+  const key = event.key.toLowerCase();
+  if (keyToNoteMap.hasOwnProperty(key)) {
+    playPitch(keyToNoteMap[key]);
+    // Optional: Button visuell kurz hervorheben
+    highlightButton(keyToNoteMap[key]);
+  }
+});
+
+function highlightButton(semitone) {
+  const buttons = document.querySelectorAll("#pitch-buttons button");
+  const button = buttons[semitone];
+  if (button) {
+    button.style.backgroundColor = "blue";
+    setTimeout(() => button.style.backgroundColor = "", 150);
+  }
+}
+
+document.querySelector('input[name="image"]').addEventListener("change", function(event) {
+  const file = event.target.files[0];
+  const previewImg = document.getElementById("previewImage");
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      previewImg.onload = () => {
+        previewImg.style.height = "40vh";  // ← Setze Höhe NACHDEM Bild geladen ist
+        previewImg.style.display = "block";
+      };
+      previewImg.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    previewImg.style.display = "none";
+    previewImg.src = "";
+  }
+});
+
+
+  </script>
+</body>
+</html>
